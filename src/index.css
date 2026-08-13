@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-surface text-ink;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-bold rounded-xl px-5 py-3 transition-all active:scale-[0.97] hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white text-ink font-semibold rounded-xl px-5 py-3 border border-surface-dark transition-all active:scale-[0.97] hover:bg-surface-light;
+  }
+  .btn-danger {
+    @apply bg-error text-white font-bold rounded-xl px-5 py-3 transition-all active:scale-[0.97] hover:bg-error-600;
+  }
+  .card {
+    @apply bg-surface-card rounded-2xl shadow-card;
+  }
+  .input-field {
+    @apply w-full bg-white border border-surface-dark rounded-xl px-4 py-3 text-ink placeholder:text-ink-light focus:border-primary focus:ring-2 focus:ring-primary-100 focus:outline-none transition-all;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold;
+  }
+  .screen-container {
+    @apply min-h-screen bg-surface pb-24;
+  }
+  .section-title {
+    @apply text-lg font-extrabold text-ink;
+  }
+}
+
+/* Scrollbar hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Custom scrollbar for main content */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
