@@ -1,10 +1,11 @@
-export type Role = 'patient' | 'doctor' | 'ambulance';
+export type Role = 'patient' | 'doctor' | 'ambulance' | 'admin';
 
-export type AppointmentStatus = 'upcoming' | 'completed' | 'cancelled' | 'in-progress' | 'pending';
+export type AppointmentStatus = 'pending' | 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'in-progress';
 export type ConsultationType = 'video' | 'clinic' | 'home';
 export type DoctorStatus = 'online' | 'busy' | 'offline';
 export type LabReportStatus = 'ready' | 'pending';
-export type AmbulanceStatus = 'offline' | 'online' | 'enroute' | 'arrived' | 'transporting' | 'completed';
+export type AmbulanceStatus = 'requested' | 'accepted' | 'enroute' | 'arrived' | 'transporting' | 'completed' | 'cancelled' | 'offline' | 'online';
+export type PaymentStatus = 'pending' | 'success' | 'failed';
 
 export interface Profile {
   id: string;
@@ -17,6 +18,9 @@ export interface Profile {
   blood_group: string | null;
   location: string | null;
   email: string | null;
+  is_approved: boolean;
+  address_lat: number | null;
+  address_lng: number | null;
 }
 
 export interface Doctor {
@@ -33,6 +37,7 @@ export interface Doctor {
   about: string;
   languages: string[];
   next_slot: string;
+  created_at: string;
 }
 
 export interface Appointment {
@@ -45,6 +50,7 @@ export interface Appointment {
   status: AppointmentStatus;
   fee: number;
   reason: string;
+  created_at: string;
   doctor?: Doctor;
   patient?: Profile;
 }
@@ -92,9 +98,26 @@ export interface AmbulanceRequest {
   driver_id: string | null;
   patient_name: string;
   pickup_address: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  driver_lat: number | null;
+  driver_lng: number | null;
+  driver_phone: string;
   distance: string;
   eta: string;
   emergency_type: string;
   phone: string;
   status: AmbulanceStatus;
+  created_at: string;
+}
+
+export interface Payment {
+  id: string;
+  appointment_id: string;
+  patient_id: string;
+  amount: number;
+  status: PaymentStatus;
+  idempotency_key: string;
+  gateway_ref: string | null;
+  created_at: string;
 }

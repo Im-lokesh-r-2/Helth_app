@@ -1,15 +1,19 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import type { Profile, Role } from './types';
+import type { Profile } from './types';
 
 interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, phone: string, role: Role) => Promise<{ error: string | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithPhone: (phone: string) => Promise<{ error: string | null }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ error: string | null }>;
+  signInAdmin: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpAdmin: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (patch: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -46,11 +50,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const signUp: AuthContextValue['signUp'] = async (email, password, fullName, phone, role) => {
+  const signInWithPhone: AuthContextValue['signInWithPhone'] = async (phone) => {
+    const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel: 'sms' } });
+    if (error) return { error: error.message };
+    return { error: null };
+  };
+
+  const verifyOtp: AuthContextValue['verifyOtp'] = async (phone, token) => {
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+    if (error) return { error: error.message };
+    return { error: null };
+  };
+
+  const signInAdmin: AuthContextValue['signInAdmin'] = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    return { error: null };
+  };
+
+  const signUpAdmin: AuthContextValue['signUpAdmin'] = async (email, password, fullName) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, phone, role } },
+      options: { data: { full_name: fullName, role: 'admin' } },
     });
     if (error) return { error: error.message };
     if (data.user) {
@@ -58,17 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.user.id,
         email,
         full_name: fullName,
-        phone,
-        role,
+        role: 'admin',
+        is_approved: true,
       });
       await fetchProfile(data.user.id);
     }
-    return { error: null };
-  };
-
-  const signIn: AuthContextValue['signIn'] = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
     return { error: null };
   };
 
@@ -77,8 +93,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  const refreshProfile = async () => {
+    if (session) await fetchProfile(session.user.id);
+  };
+
+  const updateProfile = async (patch: Partial<Profile>) => {
+    if (!profile) return;
+    const { data } = await supabase.from('profiles').update(patch).eq('id', profile.id).select().maybeSingle();
+    if (data) setProfile(data as Profile);
+  };
+
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, profile, loading, signInWithPhone, verifyOtp, signInAdmin, signUpAdmin, signOut, refreshProfile, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
